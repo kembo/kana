@@ -1,0 +1,109 @@
+<html>
+  <head>
+    <style type="text/css">
+      body {
+        text-align: right;
+      }
+      table {
+        position: fixed;
+        width: 48%;
+        right: 2%;
+        bottom: 2%;
+        background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHN0eWxlPSJ3aWR0aDoxMDAlO2hlaWdodDoxMDAlOyI+PGxpbmUgeDE9IjEwMCUiIHkxPSIwJSIgeDI9IjAlIiB5Mj0iMTAwJSIgc3R5bGU9InN0cm9rZTogIzMzMzMzMztzdHJva2Utd2lkdGg6IDE7Ij48L2xpbmU+PGxpbmUgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSIgc3R5bGU9InN0cm9rZTogIzMzMzMzMztzdHJva2Utd2lkdGg6IDE7Ij48L2xpbmU+PC9zdmc+');
+      }
+      td {
+        width: 12%;
+        position: relative;
+      }
+      td::after{
+        content: '';
+        display: block;
+        margin-top: 100%;
+      }
+      td .content {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        font-size: 6vw;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      td.right {
+        border-right-style: solid;
+        border-right-width: 4px;
+      }
+      td.bottom {
+        border-bottom-style: solid;
+        border-bottom-width: 4px;
+      }
+    </style>
+    <script src="/js/input.js"></script>
+  </head>
+  <body>
+    <p>座標：<span id="position"></span></p>
+    <p id="text-box"></p>
+    <table id="input-box">
+      <tbody>
+        <tr>
+          <td class="bslashed">
+            <div class="content"></div>
+          </td>
+          <td class="right">
+            <div class="content" id="seg-1">か</div>
+          </td>
+          <td>
+            <div class="content" id="seg-2">ら</div>
+          </td>
+          <td class="slashed">
+            <div class="content"></div>
+          </td>
+        </tr>
+        <tr>
+          <td class="bottom">
+            <div class="content" id="seg-0">あ</div>
+          </td>
+          <td class="bslashed right bottom">
+            <div class="content"></div>
+          </td>
+          <td class="slashed bottom">
+            <div class="content"></div>
+          </td>
+          <td class="bottom">
+            <div class="content" id="seg-3">ま</div>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <div class="content" id="seg-7">さ</div>
+          </td>
+          <td class="slashed right">
+            <div class="content"></div>
+          </td>
+          <td class="bslashed">
+            <div class="content"></div>
+          </td>
+          <td>
+            <div class="content" id="seg-4">な</div>
+          </td>
+        </tr>
+        <tr>
+          <td class="slashed">
+            <div class="content"></div>
+          </td>
+          <td class="right">
+            <div class="content" id="seg-6">た</div>
+          </td>
+          <td>
+            <div class="content" id="seg-5">は</div>
+          </td>
+          <td class="bslashed">
+            <div class="content"></div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>
