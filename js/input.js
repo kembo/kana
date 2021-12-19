@@ -15,42 +15,50 @@ function relPos(from, to) {
         y: to.y - from.y
     };
 }
-function quadrant(pos) {
-    if (pos.x < 0) {
-        if (pos.y < 0) {
-            return 3;
-        }
-        return 2;
-    }
-    if (pos.y < 0) {
-        return 4;
-    }
-    return 1;
-}
 function getElementCarefully(id) {
     var elem = document.getElementById(id);
     if (elem === null) {
-        throw new Error("#" + id + " is not found!");
+        throw new Error("#".concat(id, " is not found!"));
     }
     return elem;
 }
 window.addEventListener('load', function () {
     var inputArea = getElementCarefully("input-area");
-    var printPos = getElementCarefully("position");
     var textBox = getElementCarefully("text-box");
     var posOfArea = function (p) { return relPos(centerPos(inputArea), touchToVec(p)); };
+    var mot = null;
+    var stat = null;
     inputArea.addEventListener('touchstart', function (ev) {
         ev.preventDefault();
-        textBox.innerText = "";
+        if (stat instanceof AcceptableState) {
+            textBox.innerText += stat.accepted;
+        }
+        var pos = detectQuadrant(posOfArea(ev.touches[0]));
+        stat = FIRST_STEPS[pos];
+        mot = new Motion(pos);
     });
     inputArea.addEventListener('touchmove', function (ev) {
+        var _a;
         ev.preventDefault();
-        var pos = posOfArea(ev.touches[0]);
-        var quad = "" + quadrant(pos);
-        printPos.innerText = "X:" + pos.x + ", Y:" + pos.y;
-        if (textBox.innerText.slice(-1) != quad) {
-            textBox.innerText += quad;
+        if (stat === null || mot === null) {
+            return;
         }
+        var pos = detectQuadrant(posOfArea(ev.touches[0]));
+        if (pos != mot.lastPos) {
+            _a = nextState(stat, mot, pos), stat = _a[0], mot = _a[1];
+            console.log([stat, mot]);
+        }
+    });
+    inputArea.addEventListener('touchend', function (ev) {
+        ev.preventDefault();
+        if (stat === null || mot === null) {
+            return;
+        }
+        if (stat instanceof AcceptableState) {
+            textBox.innerText += stat.accepted;
+        }
+        stat = null;
+        mot = null;
     });
 });
 //# sourceMappingURL=input.js.map

@@ -1,9 +1,3 @@
-interface Vector2 {
-    x: number;
-    y: number;
-}
-type Quadrant = 1 | 2 | 3 | 4;
-
 function centerPos(elem: HTMLElement): Vector2 {
     const rect = elem.getBoundingClientRect();
     return {
@@ -23,19 +17,6 @@ function relPos(from: Vector2, to: Vector2): Vector2 {
     };
 }
 
-function quadrant(pos: Vector2): Quadrant {
-    if (pos.x < 0) {
-        if (pos.y < 0) {
-            return 3;
-        }
-        return 2;
-    }
-    if (pos.y < 0) {
-        return 4;
-    }
-    return 1;
-}
-
 function getElementCarefully(id: string): HTMLElement {
     const elem = document.getElementById(id);
     if (elem === null) {
@@ -47,23 +28,41 @@ function getElementCarefully(id: string): HTMLElement {
 
 window.addEventListener('load', () => {
     const inputArea = getElementCarefully("input-area");
-    const printPos = getElementCarefully("position");
     const textBox = getElementCarefully("text-box");
 
     const posOfArea = (p: Touch) => relPos(centerPos(inputArea), touchToVec(p));
 
+    let mot: Motion | null = null;
+    let stat: InputState | null = null;
+
     inputArea.addEventListener('touchstart', ev => {
         ev.preventDefault();
-        textBox.innerText = "";
+        if (stat instanceof AcceptableState) {
+            textBox.innerText += stat.accepted;
+        }
+
+        const pos = detectQuadrant(posOfArea(ev.touches[0]));
+        stat = FIRST_STEPS[pos];
+        mot = new Motion(pos);
     });
     inputArea.addEventListener('touchmove', ev => {
         ev.preventDefault();
-        const pos = posOfArea(ev.touches[0]);
-        const quad = `${quadrant(pos)}`;
+        if (stat === null || mot === null) { return; }
 
-        printPos.innerText = `X:${pos.x}, Y:${pos.y}`;
-        if (textBox.innerText.slice(-1) != quad) {
-            textBox.innerText += quad;
+        const pos = detectQuadrant(posOfArea(ev.touches[0]));
+        if (pos != mot.lastPos) {
+            [stat, mot] = nextState(stat, mot, pos);
+            console.log([stat, mot]);
         }
+    });
+    inputArea.addEventListener('touchend', ev => {
+        ev.preventDefault();
+        if (stat === null || mot === null) { return; }
+
+        if (stat instanceof AcceptableState) {
+            textBox.innerText += stat.accepted;
+        }
+        stat = null;
+        mot = null;
     });
 });
