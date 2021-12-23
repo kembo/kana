@@ -21,7 +21,7 @@ function subState(arg) {
     else if (arg instanceof FollowingState) {
         return arg;
     }
-    else if (typeof arg == 'string') {
+    else if (typeof arg == 'string' || !Array.isArray(arg)) {
         return new AcceptableState(arg);
     }
     else {
@@ -49,9 +49,21 @@ function createGyoStates(gyo, yoon) {
         return createStatesRec(gyo[0], [gyo[1], gyo[2]]);
     }
     if (gyo.length == 5) {
-        return createStatesRec(gyo[0], [gyo[2], gyo[4], gyo[3]], yoon ? createYoon(gyo[1]) : gyo[1]);
+        if (yoon && typeof gyo == 'string') {
+            return createStatesRec(gyo[0], [gyo[2], gyo[4], gyo[3]], createYoon(gyo[1]));
+        }
+        return createStatesRec(gyo[0], [gyo[2], gyo[4], gyo[3]], gyo[1]);
     }
     throw new Error("Gyo length must be 3 or 5!");
+}
+function createKomojiStates(yo) {
+    var conv = yo.split('').map(function (y) { return { char: y, note: "\u5C0F".concat(y) }; });
+    if (yo.length == 1) {
+        return new AcceptableState(conv[0]);
+    }
+    else {
+        return createGyoStates(conv);
+    }
 }
 /** 仮名一覧(行ごと) */
 var KANAS_LIST = {
@@ -67,10 +79,10 @@ var KANAS_LIST = {
     p: createGyoStates('ぱぴぷぺぽ', true),
     b: createGyoStates('ばびぶべぼ', true),
     m: createGyoStates('まみむめも', true),
-    y: createStatesRec('や', ['ゆ', 'よ', ['ゃ', ['ゅ', 'ょ']]], ['（', '）', '　']),
+    y: createStatesRec('や', ['ゆ', 'よ', createKomojiStates('ゃゅょ')], ['（', '）', '　']),
     r: createGyoStates('らりるれろ', true),
-    w: createStatesRec('わ', ['を', 'ん', 'ゎ'], ['、', ['。', '！', '？'], '：']),
-    x: createGyoStates('ぁぃぅぇぉ')
+    w: createStatesRec('わ', ['を', 'ん', createKomojiStates('ゎ')], ['、', ['。', '！', '？'], '：']),
+    x: createKomojiStates('ぁぃぅぇぉ')
 };
 console.log(KANAS_LIST);
 var PreGyoState = /** @class */ (function (_super) {
@@ -85,7 +97,7 @@ var GYOES_LIST = {
     a: new PreGyoState(KANAS_LIST.a, KANAS_LIST.x),
     k: new PreGyoState(KANAS_LIST.k, new PreGyoState(KANAS_LIST.g)),
     s: new PreGyoState(KANAS_LIST.s, new PreGyoState(KANAS_LIST.z)),
-    t: new PreGyoState(KANAS_LIST.t, new AcceptableState('っ', KANAS_LIST.d)),
+    t: new PreGyoState(KANAS_LIST.t, new AcceptableState({ char: 'っ', note: '小っ' }, KANAS_LIST.d)),
     n: new PreGyoState(KANAS_LIST.n),
     h: new PreGyoState(KANAS_LIST.h, new PreGyoState(KANAS_LIST.b, KANAS_LIST.p)),
     m: new PreGyoState(KANAS_LIST.m, KANAS_LIST.y),

@@ -162,7 +162,7 @@ class DialTable {
         if (lightUp) { target.td.classList.add(ClsToken.ING); }
     }
     public displaySuggest(pos: Quadrant, side: Rotaion, sugg?: AcceptableState, lightUp?: boolean) {
-        return this.displayMessage(pos, side, withAllow(pos, side, sugg?.accepted), lightUp);
+        return this.displayMessage(pos, side, withAllow(pos, side, sugg?.note || sugg?.accepted), lightUp);
     }
 
     public displayByState(state: State | null, mot: Motion | null): string {
@@ -180,27 +180,33 @@ class DialTable {
                 for (const [r, s] of gyoes) {
                     if (s === null) { continue; }
                     let mes = "";
-                    if (s.normalRot instanceof AcceptableState) { mes += s.normalRot.accepted; }
-                    if (s.reverseRot instanceof AcceptableState) { mes += s.reverseRot.accepted; }
+                    for (const s_ of [s.normalRot, s.reverseRot]) {
+                        if ((s_ instanceof AcceptableState) && !s_.note) {
+                            mes += s_.accepted;
+                        }
+                    }
                     this.displayMessage(q, r, mes);
                 }
             }
         } else if (state instanceof TouchedState) {
             // タップ直後
+            const curPos = mot.lastPos;
             const gyoes: [Rotaion, FollowingState | null][] = [
                 [ROTATION.Clock, state.clockRot],
                 [ROTATION.Counter, state.counterRot]
             ];
-            for (const [r, s] of gyoes) {
-                const q = rotQ(mot.lastPos, r);
+            for (let [r, s] of gyoes) {
                 if (s === null) { continue; }
-                if (s.normalRot instanceof AcceptableState) {
-                    this.displaySuggest(q, r, s.normalRot);
+                const q = rotQ(curPos, r);
+                let mes = "";
+                for (const s_ of [s.normalRot, s.reverseRot]) {
+                    if (s_ instanceof AcceptableState) {
+                        this.displaySuggest(q, r, s_);
+                        if (!s_.note) { mes += s_.accepted; }
+                    }
+                    r = rev(r);
                 }
-                if (s.reverseRot instanceof AcceptableState) {
-                    const rr = rev(r);
-                    this.displaySuggest(q, rr, s.reverseRot);
-                }
+                this.displayMessage(curPos, r, mes);
             }
         } else if (state instanceof FollowingState) {
             // 入力中
@@ -212,7 +218,9 @@ class DialTable {
                     : state.reverseRot;
                 if (s === null) { continue; }
                 if (s instanceof AcceptableState) {
-                    this.displayMessage(q, null, s.accepted);
+                    this.displayMessage(q, null, s.note || s.accepted);
+                    this.displaySuggest(cur, r);
+                } else if (s instanceof PreGyoState) {
                     this.displaySuggest(cur, r);
                 }
                 if (s.normalRot instanceof AcceptableState) {
@@ -224,7 +232,7 @@ class DialTable {
                 }
             }
             if (state instanceof AcceptableState) {
-                this.displayMessage(cur, null, state.accepted, true);
+                this.displayMessage(cur, null, state.note || state.accepted, true);
                 return state.accepted;
             }
         } else {

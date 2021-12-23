@@ -174,7 +174,7 @@ var DialTable = /** @class */ (function () {
         }
     };
     DialTable.prototype.displaySuggest = function (pos, side, sugg, lightUp) {
-        return this.displayMessage(pos, side, withAllow(pos, side, sugg === null || sugg === void 0 ? void 0 : sugg.accepted), lightUp);
+        return this.displayMessage(pos, side, withAllow(pos, side, (sugg === null || sugg === void 0 ? void 0 : sugg.note) || (sugg === null || sugg === void 0 ? void 0 : sugg.accepted)), lightUp);
     };
     DialTable.prototype.displayByState = function (state, mot) {
         this.resetText();
@@ -197,11 +197,11 @@ var DialTable = /** @class */ (function () {
                         continue;
                     }
                     var mes = "";
-                    if (s.normalRot instanceof AcceptableState) {
-                        mes += s.normalRot.accepted;
-                    }
-                    if (s.reverseRot instanceof AcceptableState) {
-                        mes += s.reverseRot.accepted;
+                    for (var _c = 0, _d = [s.normalRot, s.reverseRot]; _c < _d.length; _c++) {
+                        var s_ = _d[_c];
+                        if ((s_ instanceof AcceptableState) && !s_.note) {
+                            mes += s_.accepted;
+                        }
                     }
                     this.displayMessage(q, r, mes);
                 }
@@ -209,30 +209,36 @@ var DialTable = /** @class */ (function () {
         }
         else if (state instanceof TouchedState) {
             // タップ直後
+            var curPos = mot.lastPos;
             var gyoes = [
                 [ROTATION.Clock, state.clockRot],
                 [ROTATION.Counter, state.counterRot]
             ];
-            for (var _c = 0, gyoes_2 = gyoes; _c < gyoes_2.length; _c++) {
-                var _d = gyoes_2[_c], r = _d[0], s = _d[1];
-                var q = rotQ(mot.lastPos, r);
+            for (var _e = 0, gyoes_2 = gyoes; _e < gyoes_2.length; _e++) {
+                var _f = gyoes_2[_e], r = _f[0], s = _f[1];
                 if (s === null) {
                     continue;
                 }
-                if (s.normalRot instanceof AcceptableState) {
-                    this.displaySuggest(q, r, s.normalRot);
+                var q = rotQ(curPos, r);
+                var mes = "";
+                for (var _g = 0, _h = [s.normalRot, s.reverseRot]; _g < _h.length; _g++) {
+                    var s_ = _h[_g];
+                    if (s_ instanceof AcceptableState) {
+                        this.displaySuggest(q, r, s_);
+                        if (!s_.note) {
+                            mes += s_.accepted;
+                        }
+                    }
+                    r = rev(r);
                 }
-                if (s.reverseRot instanceof AcceptableState) {
-                    var rr = rev(r);
-                    this.displaySuggest(q, rr, s.reverseRot);
-                }
+                this.displayMessage(curPos, r, mes);
             }
         }
         else if (state instanceof FollowingState) {
             // 入力中
             var cur = mot.lastPos;
-            for (var _e = 0, _f = [ROTATION.Clock, ROTATION.Counter]; _e < _f.length; _e++) {
-                var r = _f[_e];
+            for (var _j = 0, _k = [ROTATION.Clock, ROTATION.Counter]; _j < _k.length; _j++) {
+                var r = _k[_j];
                 var q = rotQ(cur, r);
                 var s = mot.rot === r
                     ? state.normalRot
@@ -241,7 +247,10 @@ var DialTable = /** @class */ (function () {
                     continue;
                 }
                 if (s instanceof AcceptableState) {
-                    this.displayMessage(q, null, s.accepted);
+                    this.displayMessage(q, null, s.note || s.accepted);
+                    this.displaySuggest(cur, r);
+                }
+                else if (s instanceof PreGyoState) {
                     this.displaySuggest(cur, r);
                 }
                 if (s.normalRot instanceof AcceptableState) {
@@ -253,7 +262,7 @@ var DialTable = /** @class */ (function () {
                 }
             }
             if (state instanceof AcceptableState) {
-                this.displayMessage(cur, null, state.accepted, true);
+                this.displayMessage(cur, null, state.note || state.accepted, true);
                 return state.accepted;
             }
         }

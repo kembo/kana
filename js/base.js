@@ -152,7 +152,13 @@ var AcceptableState = /** @class */ (function (_super) {
     __extends(AcceptableState, _super);
     function AcceptableState(char, normalRot, reverseRot) {
         var _this = _super.call(this, normalRot, reverseRot) || this;
-        _this.accepted = char;
+        if (typeof char == 'string') {
+            _this.accepted = char;
+        }
+        else {
+            _this.accepted = char.char;
+            _this.note = char.note;
+        }
         return _this;
     }
     return AcceptableState;

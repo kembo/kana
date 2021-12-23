@@ -154,20 +154,27 @@ class FollowingState implements AbstractInputtingState {
         return [newStat, newMot];
     }
 }
+interface WithNote { char: string; note: string; }
 /** ここで入力終了することが可能な状態 */
 class AcceptableState extends FollowingState {
     readonly accepted: string;
+    readonly note?: string;
 
-    constructor(char: string, normalRot?: FollowingState | null, reverseRot?: FollowingState | null) {
+    constructor(char: string | WithNote, normalRot?: FollowingState | null, reverseRot?: FollowingState | null) {
         super(normalRot, reverseRot);
-        this.accepted = char;
+        if (typeof char == 'string') {
+            this.accepted = char;
+        } else {
+            this.accepted = char.char;
+            this.note = char.note;
+        }
     }
 }
 /** `AcceptableState` に続く `AcceptableState` */
 class ContinueAcceptableState extends AcceptableState {
     readonly normalRot: AcceptableState;
 
-    constructor(char: string, normalRot: AcceptableState, reverseRot?: FollowingState | null) {
+    constructor(char: string | WithNote, normalRot: AcceptableState, reverseRot?: FollowingState | null) {
         super(char, null, reverseRot);
         this.normalRot = normalRot;
     }
