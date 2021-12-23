@@ -1,11 +1,5 @@
 "use strict";
 var ClsToken = { SLSH: "slashed", BSLSH: "bslashed", MINI: "mini", ING: "inputting" };
-var Allow = {
-    1: { ClockWise: function (t) { return "\u2190\n".concat(t); }, CounterClockWise: function (t) { return "\u2191".concat(t); } },
-    2: { ClockWise: function (t) { return "".concat(t, "\u2191"); }, CounterClockWise: function (t) { return "\u2192\n".concat(t); } },
-    3: { ClockWise: function (t) { return "".concat(t, "\n\u2192"); }, CounterClockWise: function (t) { return "".concat(t, "\u2193"); } },
-    4: { ClockWise: function (t) { return "\u2193".concat(t); }, CounterClockWise: function (t) { return "".concat(t, "\n\u2190"); } },
-};
 var _BASE_T4 = [null, null, null, null];
 function createTuple4(fn) {
     if (fn instanceof Function) {
@@ -54,6 +48,53 @@ function slashSwitchCell(cell, slash, on) {
 function qToV(q) {
     var x = q & 2 ? 0 : 1;
     return { x: x, y: (q & 1) ^ x ? 0 : 1 };
+}
+/**
+ * サジェスト用の矢印付文字を生成する関数
+ * @param pos 表示する象限
+ * @param side 時計回り側か反時計回り側か
+ * @param char 表示する文字
+ */
+function withAllow(pos, side, char) {
+    var allow;
+    // a は 1～8 の値になる
+    var a = pos * 2 - (side === ROTATION.Clock ? 0 : 1);
+    if (a & 2) {
+        // 左か右矢印
+        if (a == 3 || a == 6) {
+            allow = "→";
+        } // 左側
+        else {
+            allow = "←";
+        } // 右側
+        if (char) {
+            if (a & 4) {
+                return allow + '\n' + char;
+            } // 上側
+            else {
+                return char + '\n' + allow;
+            } // 下側
+        }
+    }
+    else {
+        // 上か下矢印
+        if (a > 4) {
+            allow = "↓";
+        } // 上側
+        else {
+            allow = "↑";
+        } // 下側
+        if (char) {
+            if (a & 4) {
+                return allow + char;
+            } // 左側
+            else {
+                return char + allow;
+            } // 右側
+        }
+    }
+    // 文字が空なら矢印をそのまま返す
+    return allow;
 }
 var DialTable = /** @class */ (function () {
     /**
@@ -133,7 +174,7 @@ var DialTable = /** @class */ (function () {
         }
     };
     DialTable.prototype.displaySuggest = function (pos, side, sugg, lightUp) {
-        return this.displayMessage(pos, side, Allow[pos][side](sugg.accepted), lightUp);
+        return this.displayMessage(pos, side, withAllow(pos, side, sugg === null || sugg === void 0 ? void 0 : sugg.accepted), lightUp);
     };
     DialTable.prototype.displayByState = function (state, mot) {
         this.resetText();
@@ -189,10 +230,10 @@ var DialTable = /** @class */ (function () {
         }
         else if (state instanceof FollowingState) {
             // 入力中
-            var p = mot.lastPos;
+            var cur = mot.lastPos;
             for (var _e = 0, _f = [ROTATION.Clock, ROTATION.Counter]; _e < _f.length; _e++) {
                 var r = _f[_e];
-                var q = rotQ(p, r);
+                var q = rotQ(cur, r);
                 var s = mot.rot === r
                     ? state.normalRot
                     : state.reverseRot;
@@ -200,7 +241,8 @@ var DialTable = /** @class */ (function () {
                     continue;
                 }
                 if (s instanceof AcceptableState) {
-                    this.displaySuggest(p, r, s);
+                    this.displayMessage(q, null, s.accepted);
+                    this.displaySuggest(cur, r);
                 }
                 if (s.normalRot instanceof AcceptableState) {
                     this.displaySuggest(q, r, s.normalRot);
@@ -211,7 +253,7 @@ var DialTable = /** @class */ (function () {
                 }
             }
             if (state instanceof AcceptableState) {
-                this.displayMessage(p, null, state.accepted, true);
+                this.displayMessage(cur, null, state.accepted, true);
                 return state.accepted;
             }
         }

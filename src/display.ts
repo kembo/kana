@@ -1,10 +1,4 @@
 const ClsToken = { SLSH: "slashed", BSLSH: "bslashed", MINI: "mini", ING: "inputting" };
-const Allow: { readonly [Q in Quadrant]: { readonly [R in Rotaion]: (t: string) => string } } = {
-    1: { ClockWise: t => `←\n${t}`, CounterClockWise: t => `↑${t}` },
-    2: { ClockWise: t => `${t}↑`, CounterClockWise: t => `→\n${t}` },
-    3: { ClockWise: t => `${t}\n→`, CounterClockWise: t => `${t}↓` },
-    4: { ClockWise: t => `↓${t}`, CounterClockWise: t => `${t}\n←` },
-};
 
 
 type Tuple4<T> = readonly [T, T, T, T];
@@ -68,7 +62,36 @@ function qToV(q: number): { x: 0 | 1, y: 0 | 1 } {
     const x = q & 2 ? 0 : 1;
     return { x: x, y: (q & 1) ^ x ? 0 : 1 };
 }
-
+/**
+ * サジェスト用の矢印付文字を生成する関数
+ * @param pos 表示する象限
+ * @param side 時計回り側か反時計回り側か
+ * @param char 表示する文字
+ */
+function withAllow(pos: Quadrant, side: Rotaion, char?: string): string {
+    let allow: string;
+    // a は 1～8 の値になる
+    const a: number = pos * 2 - (side === ROTATION.Clock ? 0 : 1);
+    if (a & 2) {
+        // 左か右矢印
+        if (a == 3 || a == 6) { allow = "→"; }  // 左側
+        else { allow = "←"; }  // 右側
+        if (char) {
+            if (a & 4) { return allow + '\n' + char; }  // 上側
+            else { return char + '\n' + allow; }  // 下側
+        }
+    } else {
+        // 上か下矢印
+        if (a > 4) { allow = "↓"; }  // 上側
+        else { allow = "↑"; }  // 下側
+        if (char) {
+            if (a & 4) { return allow + char; }  // 左側
+            else { return char + allow; }  // 右側
+        }
+    }
+    // 文字が空なら矢印をそのまま返す
+    return allow;
+}
 
 class DialTable {
     readonly data: DialTableData;
@@ -138,8 +161,8 @@ class DialTable {
         }
         if (lightUp) { target.td.classList.add(ClsToken.ING); }
     }
-    public displaySuggest(pos: Quadrant, side: Rotaion, sugg: AcceptableState, lightUp?: boolean) {
-        return this.displayMessage(pos, side, Allow[pos][side](sugg.accepted), lightUp);
+    public displaySuggest(pos: Quadrant, side: Rotaion, sugg?: AcceptableState, lightUp?: boolean) {
+        return this.displayMessage(pos, side, withAllow(pos, side, sugg?.accepted), lightUp);
     }
 
     public displayByState(state: State | null, mot: Motion | null): string {
@@ -181,15 +204,16 @@ class DialTable {
             }
         } else if (state instanceof FollowingState) {
             // 入力中
-            const p = mot.lastPos
+            const cur = mot.lastPos
             for (const r of [ROTATION.Clock, ROTATION.Counter]) {
-                const q = rotQ(p, r);
+                const q = rotQ(cur, r);
                 const s = mot.rot === r
                     ? state.normalRot
                     : state.reverseRot;
                 if (s === null) { continue; }
                 if (s instanceof AcceptableState) {
-                    this.displaySuggest(p, r, s);
+                    this.displayMessage(q, null, s.accepted);
+                    this.displaySuggest(cur, r);
                 }
                 if (s.normalRot instanceof AcceptableState) {
                     this.displaySuggest(q, r, s.normalRot);
@@ -200,7 +224,7 @@ class DialTable {
                 }
             }
             if (state instanceof AcceptableState) {
-                this.displayMessage(p, null, state.accepted, true);
+                this.displayMessage(cur, null, state.accepted, true);
                 return state.accepted;
             }
         } else {
