@@ -24,14 +24,14 @@ td {
     position: relative;
 }
 
-td.right {
-    border-right-style: solid;
-    border-right-width: 4px;
+td.b-left {
+    border-left-style: solid;
+    border-left-width: 4px;
 }
 
-td.bottom {
-    border-bottom-style: solid;
-    border-bottom-width: 4px;
+td.b-top {
+    border-top-style: solid;
+    border-top-width: 4px;
 }
 
 td.slashed {

@@ -14,6 +14,16 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+var assertUnreachable = function (x) {
+    throw new Error("Unexpected value!! ".concat(x));
+};
+var QList = [4, 1, 2, 3];
+function toQ(n) {
+    if (n < 0) {
+        n = n % 4 + 4;
+    }
+    return QList[Math.floor(n) % 4];
+}
 /** 象限判定 */
 function detectQuadrant(pos) {
     if (pos.x < 0) {
@@ -29,6 +39,22 @@ function detectQuadrant(pos) {
 }
 /** 回転方向 */
 var ROTATION = { Clock: "ClockWise", Counter: "CounterClockWise" };
+function rev(rot) {
+    return rot === ROTATION.Clock
+        ? ROTATION.Counter
+        : ROTATION.Clock;
+}
+function rotQ(q, rot) {
+    if (rot === null) {
+        return q;
+    }
+    if (rot === ROTATION.Clock || rot === true) {
+        return q == 4 ? 1 : q + 1;
+    }
+    else {
+        return q == 1 ? 4 : q - 1;
+    }
+}
 /**
  * 回転方向判定関数
  * @param prev 移動元
@@ -58,21 +84,67 @@ var Motion = /** @class */ (function () {
  * 新しい動作状態を返す関数
  * @param prevMot 1つ前の動作状態
  * @param curPos 新しい象限
- * @returns 前の状態が `null` なら `null` を返す
  */
 function detectMotion(prevMot, curPos) {
-    if (prevMot === null) {
-        return null;
-    }
     var newRot = detectRotation(prevMot.lastPos, curPos);
-    return new Motion(curPos, newRot);
+    return newRot === null ? null : new Motion(curPos, newRot);
 }
-/** コマンド入力状態を示すクラス */
+/** 初期状態 */
+var WaitingState = /** @class */ (function () {
+    function WaitingState(list) {
+        this.FIRST_STEPS = list;
+    }
+    WaitingState.prototype.next = function (pos) {
+        var st = this.FIRST_STEPS[pos];
+        if (!st) {
+            return null;
+        }
+        return [st, new Motion(pos)];
+    };
+    return WaitingState;
+}());
+;
+;
+/** タッチ直後 */
+var TouchedState = /** @class */ (function () {
+    function TouchedState(clockRot, counterRot) {
+        this.clockRot = clockRot || null;
+        this.counterRot = counterRot || null;
+    }
+    TouchedState.prototype.next = function (pos, prevMot) {
+        var newMot = detectMotion(prevMot, pos);
+        if (newMot === null) {
+            return null;
+        }
+        var newStat = newMot.rot === ROTATION.Clock
+            ? this.clockRot
+            : this.counterRot;
+        if (newStat === null) {
+            return null;
+        }
+        return [newStat, newMot];
+    };
+    return TouchedState;
+}());
+/** コマンド入力状態 */
 var FollowingState = /** @class */ (function () {
     function FollowingState(normalRot, reverseRot) {
         this.normalRot = normalRot || null;
         this.reverseRot = reverseRot || null;
     }
+    FollowingState.prototype.next = function (pos, prevMot) {
+        var newMot = detectMotion(prevMot, pos);
+        if (newMot === null) {
+            return null;
+        }
+        var newStat = newMot.rot === prevMot.rot
+            ? this.normalRot
+            : this.reverseRot;
+        if (newStat === null) {
+            return null;
+        }
+        return [newStat, newMot];
+    };
     return FollowingState;
 }());
 /** ここで入力終了することが可能な状態 */
@@ -85,38 +157,14 @@ var AcceptableState = /** @class */ (function (_super) {
     }
     return AcceptableState;
 }(FollowingState));
-/** 初期状態 */
-var StartState = /** @class */ (function () {
-    function StartState(clockRot, counterRot) {
-        this.clockRot = clockRot || null;
-        this.counterRot = counterRot || null;
+/** `AcceptableState` に続く `AcceptableState` */
+var ContinueAcceptableState = /** @class */ (function (_super) {
+    __extends(ContinueAcceptableState, _super);
+    function ContinueAcceptableState(char, normalRot, reverseRot) {
+        var _this = _super.call(this, char, null, reverseRot) || this;
+        _this.normalRot = normalRot;
+        return _this;
     }
-    return StartState;
-}());
-/**
- * 次の入力状態を返す関数
- * @param prev 1つ前の状態
- * @param motion 1つ前までの動作状態
- * @param curPos
- * @returns
- */
-function nextState(prev, motion, curPos) {
-    if (prev === null) {
-        return [null, null];
-    }
-    var newMot = detectMotion(motion, curPos);
-    if (newMot === null) {
-        return [null, null];
-    }
-    if (prev instanceof StartState) {
-        if (newMot.rot === ROTATION.Clock) {
-            return [prev.clockRot, newMot];
-        }
-        return [prev.counterRot, newMot];
-    }
-    if (newMot.rot === motion.rot) {
-        return [prev.normalRot, newMot];
-    }
-    return [prev.reverseRot, newMot];
-}
+    return ContinueAcceptableState;
+}(AcceptableState));
 //# sourceMappingURL=base.js.map
