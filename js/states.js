@@ -14,73 +14,60 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-var DanAState = /** @class */ (function (_super) {
-    __extends(DanAState, _super);
-    function DanAState() {
-        return _super !== null && _super.apply(this, arguments) || this;
+function subState(arg) {
+    if (arg === null || arg === undefined) {
+        return null;
     }
-    return DanAState;
-}(ContinueAcceptableState));
-var DanIState = /** @class */ (function (_super) {
-    __extends(DanIState, _super);
-    function DanIState() {
-        return _super !== null && _super.apply(this, arguments) || this;
+    else if (arg instanceof FollowingState) {
+        return arg;
     }
-    return DanIState;
-}(AcceptableState));
-var DanUState = /** @class */ (function (_super) {
-    __extends(DanUState, _super);
-    function DanUState() {
-        return _super !== null && _super.apply(this, arguments) || this;
+    else if (typeof arg == 'string') {
+        return new AcceptableState(arg);
     }
-    return DanUState;
-}(ContinueAcceptableState));
-var DanEState = /** @class */ (function (_super) {
-    __extends(DanEState, _super);
-    function DanEState() {
-        return _super !== null && _super.apply(this, arguments) || this;
+    else {
+        return createStatesRec.apply(void 0, arg);
     }
-    return DanEState;
-}(AcceptableState));
-var DanOState = /** @class */ (function (_super) {
-    __extends(DanOState, _super);
-    function DanOState() {
-        return _super !== null && _super.apply(this, arguments) || this;
+}
+function createStatesRec() {
+    var tree = [];
+    for (var _i = 0; _i < arguments.length; _i++) {
+        tree[_i] = arguments[_i];
     }
-    return DanOState;
-}(AcceptableState));
+    var head = tree[0], norm = tree[1], rev = tree[2];
+    return new AcceptableState(head, subState(norm), subState(rev));
+}
 /**
  * あ～お段を持つことを想定した行を返す関数
+ * @param gyo その行の仮名文字一覧
  * @returns 先頭(あ段)の仮名を示す `State`
  */
-function createGyoStates(a, i, u, e, o) {
-    var oSt = new DanOState(o);
-    var eSt = e === null ? null : new DanEState(e);
-    var uSt = new DanUState(u, oSt, eSt);
-    var iSt = i === null ? null : new DanIState(i);
-    return new DanAState(a, uSt, iSt);
+function createGyoStates(gyo) {
+    if (gyo.length == 3) {
+        return createStatesRec(gyo[0], [gyo[1], gyo[2]]);
+    }
+    if (gyo.length == 5) {
+        return createStatesRec(gyo[0], [gyo[2], gyo[4], gyo[3]], gyo[1]);
+    }
+    throw new Error("Gyo length must be 3 or 5!");
 }
 /** 仮名一覧(行ごと) */
 var KANAS_LIST = {
-    a: createGyoStates('あ', 'い', 'う', 'え', 'お'),
-    k: createGyoStates('か', 'き', 'く', 'け', 'こ'),
-    s: createGyoStates('さ', 'し', 'す', 'せ', 'そ'),
-    t: createGyoStates('た', 'ち', 'つ', 'て', 'と'),
-    n: createGyoStates('な', 'に', 'ぬ', 'ね', 'の'),
-    h: createGyoStates('は', 'ひ', 'ふ', 'へ', 'ほ'),
-    m: createGyoStates('ま', 'み', 'む', 'め', 'も'),
-    y: createGyoStates('や', null, 'ゆ', null, 'よ'),
-    r: createGyoStates('ら', 'り', 'る', 'れ', 'ろ'),
-    w: createGyoStates('わ', null, 'を', null, 'ん')
+    a: createGyoStates('あいうえお'),
+    k: createGyoStates('かきくけこ'),
+    s: createGyoStates('さしすせそ'),
+    t: createGyoStates('たちつてと'),
+    n: createGyoStates('なにぬねの'),
+    h: createGyoStates('はひふへほ'),
+    m: createGyoStates('まみむめも'),
+    y: createGyoStates('やゆよ'),
+    r: createGyoStates('らりるれろ'),
+    w: createGyoStates('わをん')
 };
 console.log(KANAS_LIST);
 var PreGyoState = /** @class */ (function (_super) {
     __extends(PreGyoState, _super);
-    function PreGyoState(normalRot, reverseRot) {
-        var _this = _super.call(this) || this;
-        _this.normalRot = normalRot;
-        _this.reverseRot = reverseRot || null;
-        return _this;
+    function PreGyoState() {
+        return _super !== null && _super.apply(this, arguments) || this;
     }
     return PreGyoState;
 }(FollowingState));
@@ -97,10 +84,9 @@ var GYOES_LIST = {
 };
 /** 最初の状態 */
 var StartState = new WaitingState({
-    3: new TouchedState(GYOES_LIST.k, GYOES_LIST.a),
+    3: new TouchedState(GYOES_LIST.a, GYOES_LIST.k),
     2: new TouchedState(GYOES_LIST.s, GYOES_LIST.t),
     1: new TouchedState(GYOES_LIST.h, GYOES_LIST.n),
     4: new TouchedState(GYOES_LIST.m, GYOES_LIST.r)
 });
-GYOES_LIST.a.normalRot.next;
 //# sourceMappingURL=states.js.map

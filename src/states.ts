@@ -1,46 +1,52 @@
-class DanAState extends ContinueAcceptableState { }
-class DanIState extends AcceptableState { }
-class DanUState extends ContinueAcceptableState { }
-class DanEState extends AcceptableState { }
-class DanOState extends AcceptableState { }
-type KanaState = DanAState | DanIState | DanUState | DanEState | DanOState
+type StateNode = string | FollowingState | StateTree | null;
+type StateTree = [head: string, norm?: StateNode, rev?: StateNode];
+function subState(arg?: StateNode): FollowingState | null {
+    if (arg === null || arg === undefined) {
+        return null;
+    } else if (arg instanceof FollowingState) {
+        return arg;
+    } else if (typeof arg == 'string') {
+        return new AcceptableState(arg);
+    } else {
+        return createStatesRec(...arg);
+    }
+}
+function createStatesRec(...tree: StateTree): AcceptableState {
+    const [head, norm, rev] = tree;
+    return new AcceptableState(head, subState(norm), subState(rev));
+}
+
 /**
  * あ～お段を持つことを想定した行を返す関数
+ * @param gyo その行の仮名文字一覧
  * @returns 先頭(あ段)の仮名を示す `State`
  */
-function createGyoStates(a: string, i: string | null, u: string, e: string | null, o: string): DanAState {
-    const oSt = new DanOState(o);
-    const eSt = e === null ? null : new DanEState(e);
-    const uSt = new DanUState(u, oSt, eSt);
-    const iSt = i === null ? null : new DanIState(i);
-    return new DanAState(a, uSt, iSt);
+function createGyoStates(gyo: string): AcceptableState {
+    if (gyo.length == 3) {
+        return createStatesRec(gyo[0], [gyo[1], gyo[2]]);
+    }
+    if (gyo.length == 5) {
+        return createStatesRec(gyo[0], [gyo[2], gyo[4], gyo[3]], gyo[1]);
+    }
+    throw new Error("Gyo length must be 3 or 5!");
 }
 
 /** 仮名一覧(行ごと) */
 const KANAS_LIST = {
-    a: createGyoStates('あ', 'い', 'う', 'え', 'お'),
-    k: createGyoStates('か', 'き', 'く', 'け', 'こ'),
-    s: createGyoStates('さ', 'し', 'す', 'せ', 'そ'),
-    t: createGyoStates('た', 'ち', 'つ', 'て', 'と'),
-    n: createGyoStates('な', 'に', 'ぬ', 'ね', 'の'),
-    h: createGyoStates('は', 'ひ', 'ふ', 'へ', 'ほ'),
-    m: createGyoStates('ま', 'み', 'む', 'め', 'も'),
-    y: createGyoStates('や', null, 'ゆ', null, 'よ'),
-    r: createGyoStates('ら', 'り', 'る', 'れ', 'ろ'),
-    w: createGyoStates('わ', null, 'を', null, 'ん')
+    a: createGyoStates('あいうえお'),
+    k: createGyoStates('かきくけこ'),
+    s: createGyoStates('さしすせそ'),
+    t: createGyoStates('たちつてと'),
+    n: createGyoStates('なにぬねの'),
+    h: createGyoStates('はひふへほ'),
+    m: createGyoStates('まみむめも'),
+    y: createGyoStates('やゆよ'),
+    r: createGyoStates('らりるれろ'),
+    w: createGyoStates('わをん')
 } as const;
 console.log(KANAS_LIST);
 
-class PreGyoState extends FollowingState {
-    readonly normalRot: DanAState;
-    readonly reverseRot: FollowingState | null;
-
-    constructor(normalRot: DanAState, reverseRot?: FollowingState | null) {
-        super();
-        this.normalRot = normalRot;
-        this.reverseRot = reverseRot || null;
-    }
-}
+class PreGyoState extends FollowingState { }
 /** 行一覧 */
 const GYOES_LIST = {
     a: new PreGyoState(KANAS_LIST.a),
@@ -55,10 +61,8 @@ const GYOES_LIST = {
 
 /** 最初の状態 */
 const StartState = new WaitingState({
-    3: new TouchedState(GYOES_LIST.k, GYOES_LIST.a),
+    3: new TouchedState(GYOES_LIST.a, GYOES_LIST.k),
     2: new TouchedState(GYOES_LIST.s, GYOES_LIST.t),
     1: new TouchedState(GYOES_LIST.h, GYOES_LIST.n),
     4: new TouchedState(GYOES_LIST.m, GYOES_LIST.r)
 });
-
-GYOES_LIST.a.normalRot.next
