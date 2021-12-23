@@ -29,6 +29,7 @@ function getElementCarefully(id: string): HTMLElement {
 window.addEventListener('load', () => {
     const inputArea = getElementCarefully("input-area");
     const textBox = getElementCarefully("text-box");
+    const inputtingBox = getElementCarefully("inputting-box")
 
     if (!(inputArea instanceof HTMLTableElement)) { throw new Error("#input-area must be the TableElement."); }
     const table = new DialTable(inputArea);
@@ -49,8 +50,7 @@ window.addEventListener('load', () => {
             const prev = cur;
             cur = fn(e, prev) || [null, null];
             if (cur[0] !== prev[0]) {
-                table.displayByState(cur[0], cur[1]);
-                console.log(cur);
+                inputtingBox.innerText = table.displayByState(cur[0], cur[1]);
             }
         }
     }

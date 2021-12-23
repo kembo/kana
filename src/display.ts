@@ -1,10 +1,10 @@
-const ClsToken = { SLSH: "slashed", BSLSH: "bslashed", MINI: "mini" }
+const ClsToken = { SLSH: "slashed", BSLSH: "bslashed", MINI: "mini", ING: "inputting" };
 const Allow: { readonly [Q in Quadrant]: { readonly [R in Rotaion]: (t: string) => string } } = {
     1: { ClockWise: t => `←\n${t}`, CounterClockWise: t => `↑${t}` },
     2: { ClockWise: t => `${t}↑`, CounterClockWise: t => `→\n${t}` },
     3: { ClockWise: t => `${t}\n→`, CounterClockWise: t => `${t}↓` },
     4: { ClockWise: t => `↓${t}`, CounterClockWise: t => `${t}\n←` },
-}
+};
 
 
 type Tuple4<T> = readonly [T, T, T, T];
@@ -93,6 +93,7 @@ class DialTable {
         for (const row of this.data) {
             for (const cell of row) {
                 cell.div.innerText = "";
+                cell.td.classList.remove(ClsToken.ING);
             }
         }
     }
@@ -122,7 +123,7 @@ class DialTable {
         const p2 = qToV(rotQ(q, side));
         return this.data[p1.y * 2 + p2.y][p1.x * 2 + p2.x];
     }
-    public displayMessage(pos: Quadrant, side: Rotaion | null, mes?: string) {
+    public displayMessage(pos: Quadrant, side: Rotaion | null, mes?: string, lightUp?: boolean) {
         const target = this.getCell(pos, side);
         if (!mes) {
             mes = "";
@@ -135,15 +136,16 @@ class DialTable {
         } else {
             target.div.classList.remove(ClsToken.MINI);
         }
+        if (lightUp) { target.td.classList.add(ClsToken.ING); }
     }
-    public displaySuggest(pos: Quadrant, side: Rotaion, sugg: AcceptableState) {
-        return this.displayMessage(pos, side, Allow[pos][side](sugg.accepted));
+    public displaySuggest(pos: Quadrant, side: Rotaion, sugg: AcceptableState, lightUp?: boolean) {
+        return this.displayMessage(pos, side, Allow[pos][side](sugg.accepted), lightUp);
     }
 
-    public displayByState(state: State | null, mot: Motion | null): string | null {
+    public displayByState(state: State | null, mot: Motion | null): string {
         this.resetText();
         this.slashOn();
-        if (state === null) { return null; }
+        if (state === null) { return ""; }
         if (state instanceof WaitingState || mot === null) {
             // デフォルト表示
             for (const q of QList) {
@@ -187,7 +189,7 @@ class DialTable {
                     : state.reverseRot;
                 if (s === null) { continue; }
                 if (s instanceof AcceptableState) {
-                    this.displaySuggest(p, r, s)
+                    this.displaySuggest(p, r, s);
                 }
                 if (s.normalRot instanceof AcceptableState) {
                     this.displaySuggest(q, r, s.normalRot);
@@ -198,13 +200,13 @@ class DialTable {
                 }
             }
             if (state instanceof AcceptableState) {
-                this.displayMessage(p, null, state.accepted);
+                this.displayMessage(p, null, state.accepted, true);
                 return state.accepted;
             }
         } else {
             assertUnreachable(state);
         }
-        return null;
+        return "";
     }
 }
 

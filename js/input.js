@@ -25,6 +25,7 @@ function getElementCarefully(id) {
 window.addEventListener('load', function () {
     var inputArea = getElementCarefully("input-area");
     var textBox = getElementCarefully("text-box");
+    var inputtingBox = getElementCarefully("inputting-box");
     if (!(inputArea instanceof HTMLTableElement)) {
         throw new Error("#input-area must be the TableElement.");
     }
@@ -38,8 +39,7 @@ window.addEventListener('load', function () {
             var prev = cur;
             cur = fn(e, prev) || [null, null];
             if (cur[0] !== prev[0]) {
-                table.displayByState(cur[0], cur[1]);
-                console.log(cur);
+                inputtingBox.innerText = table.displayByState(cur[0], cur[1]);
             }
         };
     }

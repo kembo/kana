@@ -1,5 +1,5 @@
 "use strict";
-var ClsToken = { SLSH: "slashed", BSLSH: "bslashed", MINI: "mini" };
+var ClsToken = { SLSH: "slashed", BSLSH: "bslashed", MINI: "mini", ING: "inputting" };
 var Allow = {
     1: { ClockWise: function (t) { return "\u2190\n".concat(t); }, CounterClockWise: function (t) { return "\u2191".concat(t); } },
     2: { ClockWise: function (t) { return "".concat(t, "\u2191"); }, CounterClockWise: function (t) { return "\u2192\n".concat(t); } },
@@ -81,6 +81,7 @@ var DialTable = /** @class */ (function () {
             for (var _b = 0, row_1 = row; _b < row_1.length; _b++) {
                 var cell = row_1[_b];
                 cell.div.innerText = "";
+                cell.td.classList.remove(ClsToken.ING);
             }
         }
     };
@@ -112,7 +113,7 @@ var DialTable = /** @class */ (function () {
         var p2 = qToV(rotQ(q, side));
         return this.data[p1.y * 2 + p2.y][p1.x * 2 + p2.x];
     };
-    DialTable.prototype.displayMessage = function (pos, side, mes) {
+    DialTable.prototype.displayMessage = function (pos, side, mes, lightUp) {
         var target = this.getCell(pos, side);
         if (!mes) {
             mes = "";
@@ -127,15 +128,18 @@ var DialTable = /** @class */ (function () {
         else {
             target.div.classList.remove(ClsToken.MINI);
         }
+        if (lightUp) {
+            target.td.classList.add(ClsToken.ING);
+        }
     };
-    DialTable.prototype.displaySuggest = function (pos, side, sugg) {
-        return this.displayMessage(pos, side, Allow[pos][side](sugg.accepted));
+    DialTable.prototype.displaySuggest = function (pos, side, sugg, lightUp) {
+        return this.displayMessage(pos, side, Allow[pos][side](sugg.accepted), lightUp);
     };
     DialTable.prototype.displayByState = function (state, mot) {
         this.resetText();
         this.slashOn();
         if (state === null) {
-            return null;
+            return "";
         }
         if (state instanceof WaitingState || mot === null) {
             // デフォルト表示
@@ -207,14 +211,14 @@ var DialTable = /** @class */ (function () {
                 }
             }
             if (state instanceof AcceptableState) {
-                this.displayMessage(p, null, state.accepted);
+                this.displayMessage(p, null, state.accepted, true);
                 return state.accepted;
             }
         }
         else {
             assertUnreachable(state);
         }
-        return null;
+        return "";
     };
     return DialTable;
 }());
