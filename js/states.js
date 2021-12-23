@@ -54,10 +54,15 @@ function createGyoStates(gyo) {
 var KANAS_LIST = {
     a: createGyoStates('あいうえお'),
     k: createGyoStates('かきくけこ'),
+    g: createGyoStates('がぎぐげご'),
     s: createGyoStates('さしすせそ'),
+    z: createGyoStates('ざじずぜぞ'),
     t: createGyoStates('たちつてと'),
+    d: createGyoStates('だぢづでど'),
     n: createGyoStates('なにぬねの'),
     h: createGyoStates('はひふへほ'),
+    p: createGyoStates('ぱぴぷぺぽ'),
+    b: createGyoStates('ばびぶべぼ'),
     m: createGyoStates('まみむめも'),
     y: createGyoStates('やゆよ'),
     r: createGyoStates('らりるれろ'),
@@ -74,11 +79,11 @@ var PreGyoState = /** @class */ (function (_super) {
 /** 行一覧 */
 var GYOES_LIST = {
     a: new PreGyoState(KANAS_LIST.a),
-    k: new PreGyoState(KANAS_LIST.k),
-    s: new PreGyoState(KANAS_LIST.s),
-    t: new PreGyoState(KANAS_LIST.t),
+    k: new PreGyoState(KANAS_LIST.k, new PreGyoState(KANAS_LIST.g)),
+    s: new PreGyoState(KANAS_LIST.s, new PreGyoState(KANAS_LIST.z)),
+    t: new PreGyoState(KANAS_LIST.t, new PreGyoState(KANAS_LIST.d)),
     n: new PreGyoState(KANAS_LIST.n),
-    h: new PreGyoState(KANAS_LIST.h),
+    h: new PreGyoState(KANAS_LIST.h, new PreGyoState(KANAS_LIST.b, KANAS_LIST.p)),
     m: new PreGyoState(KANAS_LIST.m, KANAS_LIST.y),
     r: new PreGyoState(KANAS_LIST.r, KANAS_LIST.w)
 };
