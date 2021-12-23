@@ -1,3 +1,11 @@
+div.main {
+    margin: 2%;
+}
+
+.main p {
+    font-size: 5vw;
+}
+
 div.footer {
     position: fixed;
     text-align: right;
@@ -5,18 +13,11 @@ div.footer {
     bottom: 0px;
 }
 
-.main p {
-    font-size: 4vw;
-}
-
 table {
     position: fixed;
     width: 48%;
     right: 20%;
     bottom: 10%;
-    /*
-    background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHN0eWxlPSJ3aWR0aDoxMDAlO2hlaWdodDoxMDAlOyI+PGxpbmUgeDE9IjEwMCUiIHkxPSIwJSIgeDI9IjAlIiB5Mj0iMTAwJSIgc3R5bGU9InN0cm9rZTogI2NjY2NjYztzdHJva2Utd2lkdGg6IDE7Ij48L2xpbmU+PGxpbmUgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSIgc3R5bGU9InN0cm9rZTogI2NjY2NjYztzdHJva2Utd2lkdGg6IDE7Ij48L2xpbmU+PC9zdmc+');
-*/
 }
 
 td {
